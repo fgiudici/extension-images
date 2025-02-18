@@ -195,8 +195,9 @@ qcow_prep() {
   if [ ! -f "$QEMU_IMG" ]; then
     if [ -n "$DISTRO_URL_BASE" ]; then
       wget "${DISTRO_URL_BASE}/${QEMU_IMG}" || error
+    else
+      error "$QEMU_IMG not found (download it first)"
     fi
-    error "$QEMU_IMG not found (download it first)"
   fi
   cp "${QEMU_IMG}" "${OUTPUT_DIR}/${QEMU_IMG}"
   qemu-img resize "${OUTPUT_DIR}/${QEMU_IMG}" "$VM_DISKSIZE"
