@@ -3,32 +3,19 @@
 set -e
 
 print_help() {
-	echo "Usage: $0 [-k \$RKE2_VER] [-a \$TARGET_ARCH] [-i \$ID] [-v \$VERSION_ID] [-t \$TAG] [-dh]"
+	echo "Usage: $0 [-k \$RKE2_VER] [-a \$TARGET_ARCH] [-i \$ID] [-v \$VERSION_ID] [-r \$REPO] [-t \$TAG] [-dh]"
 	echo "     -k: rke2 version to package ($RKE2_VER)"
 	echo "     -a: architecture of the rke2 binary ($TARGET_ARCH)"
 	echo "     -i: ID to be used for the system external image ($ID)"
-	echo "     -v: ID_VERSION to be used for the system external image ($ID_VERSION)"
+	echo "     -v: VERSION_ID to be used for the system external image ($VERSION_ID)"
 	echo "     -d: debug (leaves around the directories for the build process)"
-	echo "     -t: tagged name to apply to the generated container image"
-	echo "     -r: repo name to prepend to the container image"
+	echo "     -t: tagged name to apply to the generated container image ($TAG)"
+	echo "     -r: repo name to prepend to the container image ($REPO)"
 	exit
 }
 
-REPO="localhost"
 KEEP_TMP=0
-while getopts k:a:i:v:t:r:dh opt
-do
-	case $opt in
-	k) RKE2_VER="$OPTARG" ;;
-	a) TARGET_ARCH="$OPTARG" ;;
-	i) ID="$OPTARG" ;;
-	v) VERSION_ID= ;;
-	d) KEEP_TMP=1 ;;
-	t) TAG="$OPTARG" ;;
-	r) REPO="$OPTARG" ;;
-	?) print_help ;;
-	esac
-done
+PRINTHELP=0
 
 : ${TARGET_ARCH:="amd64"}
 : ${RKE2_VER:="v1.32.1+rke2r1"}
@@ -36,12 +23,30 @@ done
 : ${ID:="sl-micro"}
 : ${VERSION_ID:="6.1"}
 : ${EXTENSION_RELOAD_MANAGER:="1"}
+: ${REPO:="localhost"}
+
+while getopts k:a:i:v:t:r:dh opt
+do
+	case $opt in
+	k) RKE2_VER="$OPTARG" ;;
+	a) TARGET_ARCH="$OPTARG" ;;
+	i) ID="$OPTARG" ;;
+	v) VERSION_ID="$OPTARG" ;;
+	d) KEEP_TMP=1 ;;
+	t) TAG="$OPTARG" ;;
+	r) REPO="$OPTARG" ;;
+	?) PRINTHELP=1 ;;
+	esac
+done
 
 TMPTAG1=${RKE2_VER/v}
 TMPTAG1=${TMPTAG1%+*}
 TMPTAG2=${RKE2_VER/*+}
 TMPTAG1=${TMPTAG1}.${TMPTAG2}
 : ${TAG:="sysextimg-rke2:$TMPTAG1"}
+
+[ $PRINTHELP -eq 1 ] && print_help
+
 
 : ${RKE2_DIR:="$RKE2_VER"}
 : ${TEMPDIR:=$(mktemp -d -p $PWD temp-$RKE2_VER.XXXXXX)}
