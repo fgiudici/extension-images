@@ -24,10 +24,6 @@ fi
 : ${VM_CORES:="2"}
 : ${VM_GRAPHICS:="spice"}
 : ${VM_AUTOCONSOLE:="text"}
-: ${RANCHER_PWD:="uc"}
-: ${RANCHER_VER:=""}
-: ${RANCHER_REPO:="latest"}
-: ${RANCHER_HOSTNAME:=""}
 : ${REMOTE_KVM:=""}
 : ${RKE2IMAGE:="quay.io/fgiudici/sysextimg-rke2:1.30.9.rke2r1"}
 
@@ -245,52 +241,6 @@ get_kubeconfig() {
   echo "export KUBECONFIG=$PWD/$FILE.yaml"
 }
 
-deploy_rancher() {
-  local ip=$(kubectl get nodes -o=jsonpath='{.items[0].metadata.annotations.k3s\.io/internal-ip}') || error
-  [ -z "$ip" ] && error "cannot retrieve cluster node ip"
-
-  echo "* add helm repos"
-  helm repo add rancher-latest https://releases.rancher.com/server-charts/latest || error
-  helm repo add jetstack https://charts.jetstack.io || error
-  helm repo update || error
-
-  echo "* deploy cert-manager"
-  kubectl create namespace cattle-system
-
-  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.crds.yaml || error
-
-  helm upgrade --install cert-manager jetstack/cert-manager \
-    --namespace cert-manager \
-    --create-namespace \
-    --version v1.13.1 || error
-
-  echo "* deploy rancher"
-  # For Kubernetes v1.25 or later, set global.cattle.psp.enabled to false.
-  local rancherOpts="--namespace cattle-system"
-  if [ -n "$RANCHER_VER" ]; then
-    case $RANCHER_VER in
-      "Dev"|"dev"|"Devel"|"devel")
-        rancherOpts="$rancherOpts --devel"
-        ;;
-      *)
-        rancherOpts="$rancherOpts --version $RANCHER_VER"
-	;;
-    esac
-  fi
-
-  if [ "$RANCHER_HOSTNAME" = "" ]; then
-    RANCHER_HOSTNAME="${ip}.sslip.io"
-  fi
-
-  helm install rancher rancher-${RANCHER_REPO}/rancher \
-  $rancherOpts \
-  --set hostname=${RANCHER_HOSTNAME} \
-  --set replicas=1 \
-  --set bootstrapPassword="$RANCHER_PWD" || error
-
-  echo "Rancher URL: https://$RANCHER_HOSTNAME"
-}
-
 help() {
   local BIN_NAME=${0//*\/}
   cat << EOF
@@ -305,7 +255,6 @@ Usage:
                           # if the artifacts folder is not found, calls "artifacts" first
     delete [all]          # delete the generated artifacts; with 'all' deletes also config files
     getkubeconf <IP>      # get the kubeconfig file from a k3s/rke2 host identified by the <IP> ip address
-    deployrancher         # install Rancher via Helm chart (requires helm binary already installed)
 
   supported env vars:
     ENVC                # the environment config file to be imported if present (default: '\$HOME/.uc-sysext/config)
@@ -324,12 +273,6 @@ Usage:
     VM_NETWORK          # virtual network (current: '$VM_NETWORK')
     VM_STORE            # path where to put the disks for the VM (current: '$VM_STORE')
     VM_CUSTOMOPTION     # custom option appended to 'virt-install'
-
-  env vars for day 2 Rancher installation
-    RANCHER_PWD         # the admin password for rancher deployment (current: '$RANCER_PWD')
-    RANCHER_VER         # Rancher version to install (default picks up the latest stable)
-    RANCHER_REPO        # Rancher helm chart repo to pick rancher from (current '$RANCHER_REPO')
-    RANCHER_HOSTNAME    # Rancher hostname (default '\$IP.sslip.io')
 
 example:
   VM_STORE=/data/images/ VM_NETWORK="network=\$NETNAME,mac=52:54:00:00:01:fe" VM_MEMORY=8192 VM_CORES=4 $BIN_NAME create
@@ -392,10 +335,6 @@ case ${1} in
       error "ip address required but missing"
     fi
     get_kubeconfig "$IP"
-    ;;
-
-  deployrancher|rancher)
-    deploy_rancher
     ;;
 
   *)
