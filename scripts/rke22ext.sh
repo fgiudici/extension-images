@@ -3,7 +3,8 @@
 set -e
 
 print_help() {
-	echo "Usage: $0 [-k \$RKE2_VER] [-a \$TARGET_ARCH] [-i \$ID] [-v \$VERSION_ID] [-r \$REPO] [-t \$TAG] [-dh]"
+	local BIN_NAME=${0//*\/}
+	echo "Usage: $BIN_NAME [-k \$RKE2_VER] [-a \$TARGET_ARCH] [-i \$ID] [-v \$VERSION_ID] [-r \$REPO] [-t \$TAG] [-dh]"
 	echo "     -k: rke2 version to package ($RKE2_VER)"
 	echo "     -a: architecture of the rke2 binary ($TARGET_ARCH)"
 	echo "     -i: ID to be used for the system external image ($ID)"

@@ -13,7 +13,7 @@ if [ "$ENVC" != "skip" -a -f "$ENVC" ]; then
 fi
 
 
-: ${MICRO_OS:=slmicro}
+: ${MICRO_OS:=leapmicro}
 : ${CFG_ROOT_PWD:="uc"}
 : ${CFG_SSH_KEY:=""}
 : ${CFG_HOSTNAME:="$MICRO_OS"}
@@ -228,17 +228,17 @@ get_kubeconfig() {
   local ip="$1"
   local FILE="rke2.yaml"
 
-  scp root@$ip:/etc/rancher/k3s/k3s.yaml ./ > /dev/null 
+  scp root@$ip:/etc/rancher/k3s/k3s.yaml ./ 2> /dev/null 
   if [ $? -eq 0 ]; then
     FILE="k3s.yaml"
   else
-    cp root@$ip:/etc/rancher/rke2/rke2.yaml ./ > /dev/null || error
+    scp root@$ip:/etc/rancher/rke2/rke2.yaml ./ 2> /dev/null || error
   fi
-  sed -i "s/127.0.0.1/${ip}/g" $FILE.yaml || error
-  chmod 600 $FILE.yaml || error
-  echo "DONE: $FILE.yaml retrieved successfully"
+  sed -i "s/127.0.0.1/${ip}/g" $FILE || error
+  chmod 600 $FILE || error
+  echo "DONE: $FILE retrieved successfully"
   echo "      you may want to:"
-  echo "export KUBECONFIG=$PWD/$FILE.yaml"
+  echo "export KUBECONFIG=$PWD/$FILE"
 }
 
 help() {
