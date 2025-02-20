@@ -53,13 +53,15 @@ TMPTAG1=${TMPTAG1}.${TMPTAG2}
 : ${TEMPDIR:=$(mktemp -d -p $PWD temp-$RKE2_VER.XXXXXX)}
 
 prereq_checks() {
-	local cmd_list="tar cat chcon mksquashfs"
+	local cmd_list="tar cat chcon mksquashfs sed"
+	local retval=0
 	for cmd in $cmd_list; do
 		if ! command -v "$cmd" > /dev/null; then
 			echo "'$cmd' not found."
-			return 1
+			retval=1
 		fi
 	done
+	return $retval
 }
 
 get_rke2_archive() {
@@ -72,6 +74,7 @@ get_rke2_archive() {
 	fi
 
 	tar xvf rke2.linux-amd64.tar.gz
+
 	popd
 }
 
@@ -79,11 +82,14 @@ make_rke2_squashfs() {
 	pushd ${TEMPDIR}
 	mkdir ${RKE2_DIR}
 	pushd ${RKE2_DIR}
-	mkdir -p usr/local/bin
+	mkdir -p usr/bin
 	mkdir -p usr/lib/systemd/system
 	mkdir -p usr/lib/extension-release.d
-	cp $TEMPDIR/bin/rke2 usr/local/bin/
+	cp $TEMPDIR/bin/rke2 usr/bin/
 	cp $TEMPDIR/lib/systemd/system/* usr/lib/systemd/system/
+
+	# replace /usr/local with /usr in rke2 systemd services
+	find usr/lib/systemd/system -type f -name "*.service" -print0 | xargs -0 sed -i 's/\/usr\/local\//\/usr\//g'
 
 	cat <<EOF >usr/lib/extension-release.d/extension-release.${RKE2_DIR}
 ID=${ID}
@@ -94,7 +100,7 @@ EOF
 	chcon -R system_u:object_r:usr_t:s0 usr
 	chcon -R system_u:object_r:lib_t:s0 usr/lib
 	chcon -R system_u:object_r:systemd_unit_file_t:s0  usr/lib/systemd/system
-	chcon -R system_u:object_r:bin_t:s0 usr/local/bin
+	chcon -R system_u:object_r:bin_t:s0 usr/bin
 
 	popd
 
