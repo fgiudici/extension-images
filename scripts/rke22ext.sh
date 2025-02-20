@@ -21,8 +21,8 @@ PRINTHELP=0
 : ${TARGET_ARCH:="amd64"}
 : ${RKE2_VER:="v1.32.1+rke2r1"}
 
-: ${ID:="sl-micro"}
-: ${VERSION_ID:="6.1"}
+: ${ID:="_any"}
+: ${VERSION_ID:=""}
 : ${EXTENSION_RELOAD_MANAGER:="1"}
 : ${REPO:="localhost"}
 
