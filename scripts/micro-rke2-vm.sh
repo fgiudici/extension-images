@@ -59,7 +59,7 @@ error() {
 
 check_rke2_image_exists() {
   podman pull $RKE2IMAGE
-  if [ $? -neq 0 ]; then
+  if [ $? -ne 0 ]; then
     error "RKE2 image $RKE2IMAGE doesn't exists"
   fi
 }
