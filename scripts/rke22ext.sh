@@ -12,10 +12,12 @@ print_help() {
 	echo "     -d: debug (leaves around the directories for the build process)"
 	echo "     -t: tagged name to apply to the generated container image ($TAG)"
 	echo "     -r: repo name to prepend to the container image ($REPO)"
+	echo "     -p: push the container to the registry"
 	exit
 }
 
 KEEP_TMP=0
+PUSH_CNT=0
 PRINTHELP=0
 
 : ${TARGET_ARCH:="amd64"}
@@ -26,7 +28,7 @@ PRINTHELP=0
 : ${EXTENSION_RELOAD_MANAGER:="1"}
 : ${REPO:="localhost"}
 
-while getopts k:a:i:v:t:r:dh opt
+while getopts k:a:i:v:t:r:dhp opt
 do
 	case $opt in
 	k) RKE2_VER="$OPTARG" ;;
@@ -36,6 +38,7 @@ do
 	d) KEEP_TMP=1 ;;
 	t) TAG="$OPTARG" ;;
 	r) REPO="$OPTARG" ;;
+	p) PUSH_CNT=1 ;;
 	?) PRINTHELP=1 ;;
 	esac
 done
@@ -114,6 +117,10 @@ EOF
 create_container_image() {
 	printf "FROM scratch\nADD ${RKE2_DIR}.raw /\n" > Dockerfile
 	podman build . -t $REPO/$TAG
+
+	if [ $PUSH_CNT -eq 1 ]; then
+		podman push $REPO/$TAG
+	fi
 }
 
 prereq_checks
