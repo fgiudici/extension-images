@@ -26,6 +26,7 @@ fi
 : ${VM_AUTOCONSOLE:="text"}
 : ${REMOTE_KVM:=""}
 : ${RKE2IMAGE:="quay.io/fgiudici/sysextimg-rke2:1.30.9.rke2r1"}
+: ${SKIP_RKE2:=false}
 
 case "$MICRO_OS" in
   leapmicro)
@@ -96,6 +97,10 @@ EOF
 }
 
 write_combustion() {
+  if $SKIP_RKE2; then
+    echo ""
+    return
+  fi
   cat << EOF
 #!/bin/sh
 # combustion: network
@@ -263,8 +268,9 @@ Usage:
     CFG_HOSTNAME        # provisioned hostname (current: '$CFG_HOSTNAME')
     CFG_SSH_KEY         # the authorized ssh public key for remote access
     CFG_ROOT_PWD        # the root password of the installed system (current: '$CFG_ROOT_PWD')
-    RKE2IMAGE           # container with systemd-sysext extension image (current: '$RKE2IMAGE')
     REMOTE_KVM          # the hostname/ip address of the KVM host if not using the local one (requires root access)
+    RKE2IMAGE           # container with systemd-sysext extension image (current: '$RKE2IMAGE')
+    SKIP_RKE2           # avoid the combustion script, i.e., don't install RKE2 (current: '$SKIP_RKE2')
     VM_AUTOCONSOLE      # auto start console for the micro OS VM (current: '$VM_AUTOCONSOLE')
     VM_CORES            # number of vcpus assigned to the VM (current: '$VM_CORES')
     VM_DISKSIZE         # desired storage size in GB of the VM (current: '$VM_DISKSIZE')
