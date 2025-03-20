@@ -31,11 +31,11 @@ fi
 case "$MICRO_OS" in
   leapmicro)
     DISTRO_NAME="openSUSE-Leap-Micro.x86_64-Default-qcow"
-    DISTRO_URL_BASE="https://download.opensuse.org/distribution/leap-micro/6.0/appliances/"
+    DISTRO_URL_BASE="https://download.opensuse.org/distribution/leap-micro/6.0/appliances"
     ;;
   microOS|microos)
     DISTRO_NAME="openSUSE-MicroOS.x86_64-ContainerHost-kvm-and-xen"
-    DISTRO_URL_BASE="https://download.opensuse.org/tumbleweed/appliances/"
+    DISTRO_URL_BASE="https://download.opensuse.org/tumbleweed/appliances"
     ;;
   slmicro)
     DISTRO_NAME="SL-Micro.x86_64-6.1-Base-qcow-GM"
