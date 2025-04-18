@@ -1,6 +1,5 @@
 #!/bin/bash
 
 echo "mkosi.finalize rke2" "$@"
-
 echo "SELinux labeling"
 restorecon -vR /buildroot/usr
